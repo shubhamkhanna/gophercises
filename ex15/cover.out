@@ -1,0 +1,22 @@
+mode: set
+gophercises/ex15/handler/handler.go:26.64,30.16 4 1
+gophercises/ex15/handler/handler.go:33.2,34.16 2 1
+gophercises/ex15/handler/handler.go:38.2,40.16 3 1
+gophercises/ex15/handler/handler.go:44.2,45.14 2 1
+gophercises/ex15/handler/handler.go:48.2,54.38 7 1
+gophercises/ex15/handler/handler.go:30.16,32.3 1 1
+gophercises/ex15/handler/handler.go:34.16,37.3 2 1
+gophercises/ex15/handler/handler.go:40.16,43.3 2 0
+gophercises/ex15/handler/handler.go:45.14,47.3 1 1
+gophercises/ex15/handler/handler.go:58.55,59.54 1 1
+gophercises/ex15/handler/handler.go:59.54,60.16 1 1
+gophercises/ex15/handler/handler.go:69.3,69.22 1 1
+gophercises/ex15/handler/handler.go:60.16,61.36 1 1
+gophercises/ex15/handler/handler.go:61.36,67.5 5 1
+gophercises/ex15/handler/handler.go:74.56,75.17 1 1
+gophercises/ex15/handler/handler.go:79.52,81.2 1 1
+gophercises/ex15/handler/handler.go:83.37,85.30 2 1
+gophercises/ex15/handler/handler.go:97.2,97.34 1 1
+gophercises/ex15/handler/handler.go:85.30,86.40 1 1
+gophercises/ex15/handler/handler.go:89.3,95.124 7 1
+gophercises/ex15/handler/handler.go:86.40,87.12 1 1

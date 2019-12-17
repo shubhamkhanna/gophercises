@@ -1,0 +1,4 @@
+- path: /gotour
+  url: https://tour.golang.org/welcome/1
+- path: /gophercises
+  url: https://gophercises.com

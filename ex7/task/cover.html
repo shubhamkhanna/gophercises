@@ -1,0 +1,315 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">gophercises/ex7/task/cmd/add.go (100.0%)</option>
+				
+				<option value="file1">gophercises/ex7/task/cmd/do.go (96.2%)</option>
+				
+				<option value="file2">gophercises/ex7/task/cmd/list.go (100.0%)</option>
+				
+				<option value="file3">gophercises/ex7/task/db/tasks.go (100.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package cmd
+
+import (
+        "fmt"
+        "strings"
+
+        "gophercises/ex7/task/db"
+
+        "github.com/spf13/cobra"
+)
+
+var addCmd = &amp;cobra.Command{
+        Use:   "add",
+        Short: "Adds a task to your task list.",
+        Run: func(cmd *cobra.Command, args []string) <span class="cov8" title="1">{
+                task := strings.Join(args, " ")
+                _, err := db.CreateTask(task)
+                if err != nil </span><span class="cov8" title="1">{
+                        fmt.Println("Something went wrong:", err)
+                        return
+                }</span>
+                <span class="cov8" title="1">fmt.Printf("Added \"%s\" to your task list.\n", task)</span>
+        },
+}
+
+func init() <span class="cov8" title="1">{
+        RootCmd.AddCommand(addCmd)
+}</span>
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package cmd
+
+import (
+        "fmt"
+        "strconv"
+
+        "gophercises/ex7/task/db"
+
+        "github.com/spf13/cobra"
+)
+
+var doCmd = &amp;cobra.Command{
+        Use:   "do",
+        Short: "Marks a task as complete",
+        Run: func(cmd *cobra.Command, args []string) <span class="cov8" title="1">{
+                if args[0] == "all" &amp;&amp; len(args) == 1 </span><span class="cov8" title="1">{
+                        allTasks, _ := db.AllTasks()
+                        for _, task := range allTasks </span><span class="cov8" title="1">{
+                                db.DeleteTask(task.Key)
+                        }</span>
+                        <span class="cov8" title="1">fmt.Printf("All tasks has been done.\n")
+                        return</span>
+                }
+
+                <span class="cov8" title="1">var ids []int
+                for _, arg := range args </span><span class="cov8" title="1">{
+                        id, err := strconv.Atoi(arg)
+                        if err != nil </span><span class="cov8" title="1">{
+                                fmt.Println("Failed to parse the argument:", arg)
+                        }</span> else<span class="cov8" title="1"> {
+                                ids = append(ids, id)
+                        }</span>
+                }
+                <span class="cov8" title="1">tasks, err := db.AllTasks()
+                if err != nil </span><span class="cov8" title="1">{
+                        fmt.Println("Something went wrong:", err)
+                        return
+                }</span>
+                <span class="cov8" title="1">for _, id := range ids </span><span class="cov8" title="1">{
+                        if id &lt;= 0 || id &gt; len(tasks) </span><span class="cov8" title="1">{
+                                fmt.Println("Invalid task number:", id)
+                                continue</span>
+                        }
+                        <span class="cov8" title="1">task := tasks[id-1]
+                        err := db.DeleteTask(task.Key)
+                        if err != nil </span><span class="cov0" title="0">{
+                                fmt.Printf("Failed to mark \"%d\" as completed. Error: %s\n", id, err)
+                        }</span> else<span class="cov8" title="1"> {
+                                fmt.Printf("Marked \"%d\" as completed.\n", id)
+                        }</span>
+                }
+        },
+}
+
+func init() <span class="cov8" title="1">{
+        RootCmd.AddCommand(doCmd)
+}</span>
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package cmd
+
+import (
+        "fmt"
+
+        "gophercises/ex7/task/db"
+
+        "github.com/spf13/cobra"
+)
+
+var listCmd = &amp;cobra.Command{
+        Use:   "list",
+        Short: "Lists all of your tasks.",
+        Run: func(cmd *cobra.Command, args []string) <span class="cov8" title="1">{
+                tasks, err := db.AllTasks()
+                if err != nil </span><span class="cov8" title="1">{
+                        fmt.Println("Something went wrong:", err)
+                        return
+                }</span>
+                <span class="cov8" title="1">if len(tasks) == 0 </span><span class="cov8" title="1">{
+                        fmt.Println("You have no tasks to complete! Why not take a vacation? 🏖")
+                        return
+                }</span>
+                <span class="cov8" title="1">fmt.Println("You have the following tasks:")
+                for i, task := range tasks </span><span class="cov8" title="1">{
+                        fmt.Printf("%d. %s\n", i+1, task.Value)
+                }</span>
+        },
+}
+
+func init() <span class="cov8" title="1">{
+        RootCmd.AddCommand(listCmd)
+}</span>
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package db
+
+import (
+        "encoding/binary"
+        "time"
+
+        "github.com/boltdb/bolt"
+)
+
+var taskBucket = []byte("tasks")
+var db *bolt.DB
+
+type Task struct {
+        Key   int
+        Value string
+}
+
+func Init(dbPath string) error <span class="cov8" title="1">{
+        var err error
+        db, err = bolt.Open(dbPath, 0600, &amp;bolt.Options{Timeout: 1 * time.Second})
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        <span class="cov8" title="1">return db.Update(func(tx *bolt.Tx) error </span><span class="cov8" title="1">{
+                _, err := tx.CreateBucketIfNotExists(taskBucket)
+                return err
+        }</span>)
+}
+
+func CloseDB() <span class="cov8" title="1">{
+        db.Close()
+}</span>
+
+func CreateTask(task string) (int, error) <span class="cov8" title="1">{
+        var id int
+        err := db.Update(func(tx *bolt.Tx) error </span><span class="cov8" title="1">{
+                b := tx.Bucket(taskBucket)
+                id64, _ := b.NextSequence()
+                id = int(id64)
+                key := itob(id)
+                return b.Put(key, []byte(task))
+        }</span>)
+        <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
+                return -1, err
+        }</span>
+        <span class="cov8" title="1">return id, nil</span>
+}
+
+func AllTasks() ([]Task, error) <span class="cov8" title="1">{
+        var tasks []Task
+        err := db.View(func(tx *bolt.Tx) error </span><span class="cov8" title="1">{
+                b := tx.Bucket(taskBucket)
+                c := b.Cursor()
+                for k, v := c.First(); k != nil; k, v = c.Next() </span><span class="cov8" title="1">{
+                        tasks = append(tasks, Task{
+                                Key:   btoi(k),
+                                Value: string(v),
+                        })
+                }</span>
+                <span class="cov8" title="1">return nil</span>
+        })
+        <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return tasks, nil</span>
+}
+
+func DeleteTask(key int) error <span class="cov8" title="1">{
+        return db.Update(func(tx *bolt.Tx) error </span><span class="cov8" title="1">{
+                b := tx.Bucket(taskBucket)
+                return b.Delete(itob(key))
+        }</span>)
+}
+
+func itob(v int) []byte <span class="cov8" title="1">{
+        b := make([]byte, 8)
+        binary.BigEndian.PutUint64(b, uint64(v))
+        return b
+}</span>
+
+func btoi(b []byte) int <span class="cov8" title="1">{
+        return int(binary.BigEndian.Uint64(b))
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

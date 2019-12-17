@@ -1,0 +1,200 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">gophercises/ex15/handler/handler.go (95.7%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package handler
+
+import (
+        "bytes"
+        "fmt"
+        "io"
+        "log"
+        "net/http"
+        "net/url"
+        "os"
+        "runtime/debug"
+        "strconv"
+        "strings"
+
+        "github.com/alecthomas/chroma/formatters/html"
+        "github.com/alecthomas/chroma/lexers"
+        "github.com/alecthomas/chroma/styles"
+)
+
+// LinkUrl interface
+type LinkUrl interface {
+        makeLinks(string) string
+}
+
+// SourceCodeHandler redirects to source code.
+func SourceCodeHandler(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        path := r.FormValue("path")
+        lineStr := r.FormValue("line")
+        line, err := strconv.Atoi(lineStr)
+        if err != nil </span><span class="cov8" title="1">{
+                line = -1
+        }</span>
+        <span class="cov8" title="1">file, err := os.Open(path)
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+        }</span>
+        <span class="cov8" title="1">b := bytes.NewBuffer(nil)
+        _, err = io.Copy(b, file)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+        }</span>
+        <span class="cov8" title="1">var lines [][2]int
+        if line &gt; 0 </span><span class="cov8" title="1">{
+                lines = append(lines, [2]int{line, line})
+        }</span>
+        <span class="cov8" title="1">lexer := lexers.Get("go")
+        iterator, err := lexer.Tokenise(nil, b.String())
+        style := styles.Get("github")
+        formatter := html.New(html.TabWidth(2), html.HighlightLines(lines))
+        w.Header().Set("Content-Type", "text/html")
+        fmt.Fprint(w, "&lt;style&gt;pre { font-size: 1.2em; }&lt;/style&gt;")
+        formatter.Format(w, style, iterator)</span>
+}
+
+// DevMiddleware is a middleware handle.
+func DevMiddleware(app http.Handler) http.HandlerFunc <span class="cov8" title="1">{
+        return func(w http.ResponseWriter, r *http.Request) </span><span class="cov8" title="1">{
+                defer func() </span><span class="cov8" title="1">{
+                        if err := recover(); err != nil </span><span class="cov8" title="1">{
+                                log.Println(err)
+                                stack := debug.Stack()
+                                log.Println(string(stack))
+                                w.WriteHeader(http.StatusInternalServerError)
+                                fmt.Fprintf(w, "&lt;h1&gt;panic: %v&lt;/h1&gt;&lt;pre&gt;%s&lt;/pre&gt;", err, makeLinks(string(stack)))
+                        }</span>
+                }()
+                <span class="cov8" title="1">app.ServeHTTP(w, r)</span>
+        }
+}
+
+// PanicDemo panics the page
+func PanicDemo(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        panic("Oh no!")</span>
+}
+
+// Hello welcome page.
+func Hello(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        fmt.Fprintln(w, "&lt;h1&gt;Hello!&lt;/h1&gt;")
+}</span>
+
+func makeLinks(stack string) string <span class="cov8" title="1">{
+        lines := strings.Split(stack, "\n")
+        for li, line := range lines </span><span class="cov8" title="1">{
+                if len(line) == 0 || line[0] != '\t' </span><span class="cov8" title="1">{
+                        continue</span>
+                }
+                <span class="cov8" title="1">lineSplits := strings.Split(line, ":")
+                file := strings.TrimSpace(lineSplits[0])
+                lineStr := strings.TrimSpace(strings.Split(lineSplits[1], " ")[0])
+                v := url.Values{}
+                v.Set("path", file)
+                v.Set("line", lineStr)
+                lines[li] = "\t&lt;a href=\"/debug/?" + v.Encode() + "\"&gt;" + file + ":" + lineStr + "&lt;/a&gt;" + line[len(file)+2+len(lineStr):]</span>
+        }
+        <span class="cov8" title="1">return strings.Join(lines, "\n")</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

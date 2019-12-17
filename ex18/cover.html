@@ -1,0 +1,379 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">gophercises/ex18/primitive/primitive.go (91.7%)</option>
+				
+				<option value="file1">gophercises/ex18/primitive/transform_apis.go (97.5%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package primitive
+
+import (
+        "bytes"
+        "errors"
+        "fmt"
+        "io"
+        "io/ioutil"
+        "os"
+        "os/exec"
+        "strings"
+)
+
+// Mode defines the shapes used when transforming images.
+type Mode int
+
+// Modes supported by the primitive package.
+const (
+        ModeCombo Mode = iota
+        ModeTriangle
+        ModeRect
+        ModeEllipse
+        ModeCircle
+        ModeRotatedRect
+        ModeBeziers
+        ModeRotatedEllipse
+        ModePolygon
+)
+
+// WithMode is an option for the Transform function that will define the
+// mode you want to use. By default, ModeTriangle will be used.
+func WithMode(mode Mode) func() []string <span class="cov8" title="1">{
+        return func() []string </span><span class="cov8" title="1">{
+                return []string{"-m", fmt.Sprintf("%d", mode)}
+        }</span>
+}
+
+// Transform will take the provided image and apply a primitive
+// transformation to it, then return a reader to the resulting image.
+var mocktPrimativeTmpfile = tempfile
+var mockExeCmd = exeCmd
+
+func Transform(image io.Reader, ext string, numShapes int, opts ...func() []string) (io.Reader, error) <span class="cov8" title="1">{
+        var args []string
+        for _, opt := range opts </span><span class="cov8" title="1">{
+                args = append(args, opt()...)
+        }</span>
+
+        <span class="cov8" title="1">in, err := mocktPrimativeTmpfile("in_", ext, "")
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, errors.New("primitive: failed to create temporary input file")
+        }</span>
+        <span class="cov8" title="1">defer os.Remove(in.Name())
+        out, err := mocktPrimativeTmpfile("out_", ext, "")
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, errors.New("primitive: failed to create temporary output file")
+        }</span>
+        <span class="cov8" title="1">defer os.Remove(out.Name())
+
+        // Read image into in file
+        _, err = io.Copy(in, image)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, errors.New("primitive: failed to copy image into temp input file")
+        }</span>
+
+        // Run primitive w/ -i in.Name() -o out.Name()
+        <span class="cov8" title="1">stdCombo, err := primitive(in.Name(), out.Name(), numShapes, args...)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("primitive: failed to run the primitive command. stdcombo=%s", stdCombo)
+        }</span>
+        <span class="cov8" title="1">fmt.Println(stdCombo)
+
+        // read out into a reader, return reader, delete out
+        b := bytes.NewBuffer(nil)
+        _, err = io.Copy(b, out)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, errors.New("primitive: Failed to copy output file into byte buffer")
+        }</span>
+        <span class="cov8" title="1">return b, nil</span>
+}
+
+func primitive(inputFile, outputFile string, numShapes int, args ...string) (string, error) <span class="cov8" title="1">{
+        argStr := fmt.Sprintf("-i %s -o %s -n %d", inputFile, outputFile, numShapes)
+        args = append(strings.Fields(argStr), args...)
+        b, err := mockExeCmd(args...)
+        return string(b), err
+}</span>
+
+func exeCmd(args ...string) ([]byte, error) <span class="cov8" title="1">{
+        cmd, err := exec.Command("primitive", args...).CombinedOutput()
+        return cmd, err
+}</span>
+
+func tempfile(prefix, ext string, location string) (*os.File, error) <span class="cov8" title="1">{
+        in, err := ioutil.TempFile(location, prefix)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, errors.New("primitive: failed to create temporary file")
+        }</span>
+        <span class="cov8" title="1">defer os.Remove(in.Name())
+        return os.Create(fmt.Sprintf("%s.%s", in.Name(), ext))</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package primitive
+
+import (
+        "fmt"
+        "io"
+        "net/http"
+        "os"
+        "path/filepath"
+        "strconv"
+        "text/template"
+)
+
+func Modify(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        f, err := os.Open("./img/" + filepath.Base(r.URL.Path))
+        if err != nil </span><span class="cov8" title="1">{
+                fmt.Println(err.Error())
+                http.Error(w, err.Error(), http.StatusBadRequest)
+                return
+        }</span>
+        <span class="cov8" title="1">defer f.Close()
+        ext := filepath.Ext(f.Name())[1:]
+        modeStr := r.FormValue("mode")
+        if modeStr == "" </span><span class="cov8" title="1">{
+                renderModeChoices(w, r, f, ext)
+                return
+        }</span>
+        <span class="cov8" title="1">mode, err := strconv.Atoi(modeStr)
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, err.Error(), http.StatusBadRequest)
+                return
+        }</span>
+        <span class="cov8" title="1">nStr := r.FormValue("n")
+        if nStr == "" </span><span class="cov8" title="1">{
+                renderNumShapeChoices(w, r, f, ext, Mode(mode))
+                return
+        }</span>
+        <span class="cov8" title="1">http.Redirect(w, r, "/img/"+filepath.Base(f.Name()), http.StatusFound)</span>
+}
+
+var mocktempfile = tempfile
+
+func Upload(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        file, header, err := r.FormFile("image")
+        if err != nil </span><span class="cov8" title="1">{
+                fmt.Println(err.Error())
+                http.Error(w, err.Error(), http.StatusBadRequest)
+                return
+        }</span>
+        <span class="cov8" title="1">defer file.Close()
+        ext := filepath.Ext(header.Filename)[1:]
+        onDisk, err := mocktempfile("", ext, "./img/")
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, "Something went wrong", http.StatusInternalServerError)
+                return
+        }</span>
+        <span class="cov8" title="1">defer onDisk.Close()
+        _, err = io.Copy(onDisk, file)
+        http.Redirect(w, r, "/modify/"+filepath.Base(onDisk.Name()), http.StatusFound)</span>
+}
+
+func renderNumShapeChoices(w http.ResponseWriter, r *http.Request, rs io.ReadSeeker, ext string, mode Mode) <span class="cov8" title="1">{
+        opts := []genOpts{
+                {N: 10, M: mode},
+                {N: 20, M: mode},
+                {N: 30, M: mode},
+                {N: 40, M: mode},
+        }
+        imgs, err := genImages(rs, ext, opts...)
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">html := `&lt;html&gt;&lt;body&gt;
+                        {{range .}}
+                                &lt;a href="/modify/{{.Name}}?mode={{.Mode}}&amp;n={{.NumShapes}}"&gt;
+                                        &lt;img style="width: 20%;" src="/img/{{.Name}}"&gt;
+                                &lt;/a&gt;
+                        {{end}}
+                        &lt;/body&gt;&lt;/html&gt;`
+        tpl := template.Must(template.New("").Parse(html))
+        type dataStruct struct {
+                Name      string
+                Mode      Mode
+                NumShapes int
+        }
+        var data []dataStruct
+        for i, img := range imgs </span><span class="cov8" title="1">{
+                data = append(data, dataStruct{
+                        Name:      filepath.Base(img),
+                        Mode:      opts[i].M,
+                        NumShapes: opts[i].N,
+                })
+        }</span>
+        <span class="cov8" title="1">err = tpl.Execute(w, data)
+        if err != nil </span><span class="cov0" title="0">{
+                panic(err)</span>
+        }
+}
+
+func renderModeChoices(w http.ResponseWriter, r *http.Request, rs io.ReadSeeker, ext string) <span class="cov8" title="1">{
+        opts := []genOpts{
+                {N: 10, M: ModeCircle},
+                {N: 10, M: ModeBeziers},
+                {N: 10, M: ModePolygon},
+                {N: 10, M: ModeCombo},
+        }
+        imgs, err := genImages(rs, ext, opts...)
+        if err != nil </span><span class="cov8" title="1">{
+                //panic(err)
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">html := `&lt;html&gt;&lt;body&gt;
+                        {{range .}}
+                                &lt;a href="/modify/{{.Name}}?mode={{.Mode}}"&gt;
+                                        &lt;img style="width: 20%;" src="/img/{{.Name}}"&gt;
+                                &lt;/a&gt;
+                        {{end}}
+                        &lt;/body&gt;&lt;/html&gt;`
+        tpl := template.Must(template.New("").Parse(html))
+        type dataStruct struct {
+                Name string
+                Mode Mode
+        }
+        var data []dataStruct
+        for i, img := range imgs </span><span class="cov8" title="1">{
+                data = append(data, dataStruct{
+                        Name: filepath.Base(img),
+                        Mode: opts[i].M,
+                })
+        }</span>
+        <span class="cov8" title="1">err = tpl.Execute(w, data)
+        if err != nil </span><span class="cov0" title="0">{
+                panic(err)</span>
+        }
+}
+
+type genOpts struct {
+        N int
+        M Mode
+}
+
+func genImages(rs io.ReadSeeker, ext string, opts ...genOpts) ([]string, error) <span class="cov8" title="1">{
+        var ret []string
+        for _, opt := range opts </span><span class="cov8" title="1">{
+                rs.Seek(0, 0)
+                f, err := genImage(rs, ext, opt.N, opt.M)
+                if err != nil </span><span class="cov8" title="1">{
+                        return nil, err
+                }</span>
+                <span class="cov8" title="1">ret = append(ret, f)</span>
+        }
+        <span class="cov8" title="1">return ret, nil</span>
+}
+
+var mockTransform = Transform
+
+func genImage(r io.Reader, ext string, numShapes int, mode Mode) (string, error) <span class="cov8" title="1">{
+        out, err := mockTransform(r, ext, numShapes, WithMode(mode))
+        if err != nil </span><span class="cov8" title="1">{
+                return "", err
+        }</span>
+        <span class="cov8" title="1">outFile, err := mocktempfile("", ext, "./img/")
+        if err != nil </span><span class="cov8" title="1">{
+                return "", err
+        }</span>
+        <span class="cov8" title="1">defer outFile.Close()
+        io.Copy(outFile, out)
+        return outFile.Name(), nil</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
